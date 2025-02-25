@@ -77,7 +77,7 @@ fi
 
 if [ "$answer" = "$pick_country_name" ]; then
     ((seen_len++))
-    echo -e "[$((seen_len))/$countries_len] $answer is correct! ${GREEN}+1 point${RESET}"
+    echo -e "${GRAY}[$((seen_len))/$countries_len] Correct! ${RESET}$pick_capital${GRAY} is the capital of: ${RESET}$answer${GRAY}! ${GREEN}+1 point${RESET}"
 
     if [ "$seen_len" = "$countries_len" ]; then
         exit 3
@@ -86,6 +86,6 @@ if [ "$answer" = "$pick_country_name" ]; then
     exit 0
 
 else
-    echo -e "${RED}LOSER! ${GRAY}${ITALIC}It was: $pick_country_name...${RESET}"
+    echo -e "${RED}LOSER! ${GRAY}${ITALIC}$pick_capital is the capital of: $pick_country_name...${RESET}"
     exit 1
 fi
