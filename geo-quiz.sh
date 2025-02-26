@@ -10,18 +10,21 @@ GRAY="\e[37m"
 
 ITALIC="\e[3m"
 
+SEEN_FILE=./data/seen.json
+DATA_FILE=./data/countries.json
+
 function reset() {
-    echo "[]" > ./seen.json
+    echo "[]" > $SEEN_FILE
 }
 
 score=0
 reset
 
-if [ ! -f "./countries.json" ]; then
-    curl -o countries.json "https://raw.githubusercontent.com/mledoze/countries/refs/heads/master/countries.json"
+if [ ! -f $DATA_FILE ]; then
+    curl -o $DATA_FILE "https://raw.githubusercontent.com/mledoze/countries/refs/heads/master/countries.json"
 fi
 
-all_regions=`jq -r '.[].region' ./countries.json | sort | uniq`
+all_regions=`jq -r '.[].region' $DATA_FILE | sort | uniq`
 
 if [ -n "$1" ]; then
     region=$1
@@ -60,7 +63,7 @@ print_sep
 
 while true
 do
-    ./geo-quizz.sh $region $difficulty
+    ./mg-country-from-capital.sh $region $difficulty
     case $? in
         0) ((score++)) ;;
         1) break ;;

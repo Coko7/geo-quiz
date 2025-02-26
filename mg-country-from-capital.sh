@@ -10,16 +10,19 @@ GRAY="\e[37m"
 
 ITALIC="\e[3m"
 
+SEEN_FILE=./data/seen.json
+DATA_FILE=./data/countries.json
+
 # External args
 MAIN_REGION="$1"
 DIFFICULTY="$2"
 
 function get_all_countries() {
-    jq '.' ./countries.json
+    jq '.' $DATA_FILE
 }
 
 function get_seen_country_names() {
-    jq '.' ./seen.json
+    jq '.' $SEEN_FILE
 }
 
 seen_countries=`get_seen_country_names`
@@ -43,7 +46,7 @@ remain_country_names=`echo -e "$remain_countries" | jq -r '.[].name.common'`
 pick=`echo -e "$remain_countries" | jq --argjson r $RANDOM '.[$r % length]'`
 pick_country_name=`echo -e "$pick" | jq -r '.name.common'`
 
-echo $seen_countries | jq ". += [\"$pick_country_name\"]" > ./seen.json
+echo $seen_countries | jq ". += [\"$pick_country_name\"]" > $SEEN_FILE
 
 pick_capital=`echo -e "$pick" | jq -r '.capital[0]'`
 pick_subregion=`echo -e "$pick" | jq -r '.subregion'`
