@@ -1,0 +1,7 @@
+repos:
+-   repo: https://github.com/koalaman/shellcheck-precommit
+    rev: v0.7.2
+    hooks:
+    -   id: shellcheck
+        args: ["-x"]
+#       args: ["--severity=warning"]  # Optionally only show errors and warnings
