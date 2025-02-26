@@ -1,59 +1,36 @@
 #!/usr/bin/env bash
 
-RESET="\e[0m"
-
-RED="\e[31m"
-GREEN="\e[32m"
-YELLOW="\e[33m"
-BLUE="\e[34m"
-GRAY="\e[37m"
-
-ITALIC="\e[3m"
-
-SEEN_FILE=./data/seen.json
-DATA_FILE=./data/countries.json
+source source_me.sh
 
 # External args
-MAIN_REGION="$1"
-DIFFICULTY="$2"
+MAIN_REGION=$1
+DIFFICULTY=$2
 
-function get_all_countries() {
-    jq '.' $DATA_FILE
-}
+seen=`get_seen_country_names`
+seen_len=`echo $seen | jq 'length'`
 
-function get_seen_country_names() {
-    jq '.' $SEEN_FILE
-}
-
-seen_countries=`get_seen_country_names`
-seen_len=`echo -e "$seen_countries" | jq 'length'`
-
-countries=`get_all_countries | jq --arg region $MAIN_REGION \
-    '[.[] | select(.region == $region and .independent == true)]'`
-countries_len=`echo -e "$countries" | jq 'length'`
+countries=`get_countries $MAIN_REGION true`
+countries_len=`echo $countries | jq 'length'`
 if [ "$countries_len" = 0 ]; then
     exit 2
 fi
 
 game_status_header="[$seen_len/$countries_len]"
 
-remain_countries=`echo -e "$countries" \
-    | jq --argjson blacklist "$seen_countries" \
-    'map(select(.name.common as $name | ($blacklist | index($name) | not)))'`
+remain_countries=`filter_countries "$countries" "$seen"`
+remain_country_names=`echo $remain_countries | jq -cr '.[].name.common'`
 
-remain_country_names=`echo -e "$remain_countries" | jq -r '.[].name.common'`
+pick=`get_rand_entry "$remain_countries"`
+pick_country_name=`echo $pick | jq -cr '.name.common'`
 
-pick=`echo -e "$remain_countries" | jq --argjson r $RANDOM '.[$r % length]'`
-pick_country_name=`echo -e "$pick" | jq -r '.name.common'`
+echo $seen | jq ". += [\"$pick_country_name\"]" > $SEEN_FILE
 
-echo $seen_countries | jq ". += [\"$pick_country_name\"]" > $SEEN_FILE
-
-pick_capital=`echo -e "$pick" | jq -r '.capital[0]'`
-pick_subregion=`echo -e "$pick" | jq -r '.subregion'`
+pick_capital=`echo $pick | jq -r '.capital[0]'`
+pick_subregion=`echo $pick | jq -r '.subregion'`
 
 case "$DIFFICULTY" in
-    "Easy")
-        COUNTRY_NAMES=`echo -e "$remain_countries" \
+    Easy)
+        COUNTRY_NAMES=`echo -e $remain_countries \
             | jq -r --arg subregion "$pick_subregion" '.[] | select(.subregion == $subregion) | "\(.flag) \(.name.common)"' \
             | sort`
 
