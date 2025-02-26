@@ -6,50 +6,49 @@ source source_me.sh
 MAIN_REGION=$1
 DIFFICULTY=$2
 
-seen=`get_seen_country_names`
-seen_len=`echo $seen | jq 'length'`
+seen=$(get_seen_country_names)
+seen_len=$(echo "$seen" | jq 'length')
 
-countries=`get_countries $MAIN_REGION true`
-countries_len=`echo $countries | jq 'length'`
+countries=$(get_countries "$MAIN_REGION" true)
+countries_len=$(echo "$countries" | jq 'length')
 if [ "$countries_len" = 0 ]; then
     exit 2
 fi
 
 game_status_header="[$seen_len/$countries_len]"
 
-remain_countries=`filter_countries "$countries" "$seen"`
-remain_country_names=`echo $remain_countries | jq -cr '.[].name.common'`
+remain_countries=$(filter_countries "$countries" "$seen")
 
-pick=`get_rand_entry "$remain_countries"`
-pick_country_name=`echo $pick | jq -cr '.name.common'`
+pick=$(get_rand_entry "$remain_countries")
+pick_country_name=$(echo "$pick" | jq -cr '.name.common')
 
-echo $seen | jq ". += [\"$pick_country_name\"]" > $SEEN_FILE
+echo "$seen" | jq ". += [\"$pick_country_name\"]" > $SEEN_FILE
 
-pick_capital=`echo $pick | jq -r '.capital[0]'`
-pick_subregion=`echo $pick | jq -r '.subregion'`
+pick_capital=$(echo "$pick" | jq -r '.capital[0]')
+pick_subregion=$(echo "$pick" | jq -r '.subregion')
 
 case "$DIFFICULTY" in
     Easy)
-        COUNTRY_NAMES=`echo -e $remain_countries \
+        remain_country_names=$(echo -e "$remain_countries" \
             | jq -r --arg subregion "$pick_subregion" '.[] | select(.subregion == $subregion) | "\(.flag) \(.name.common)"' \
-            | sort`
+            | sort)
 
         header="$pick_capital ($pick_subregion):"
         ;;
     # "Medium")
     # "Hard")
     *)
-        COUNTRY_NAMES=`echo -e "$remain_countries" \
+        remain_country_names=$(echo -e "$remain_countries" \
             | jq -r --arg region "$MAIN_REGION" '.[] | select(.region == $region) | "\(.flag) \(.name.common)"' \
-            | sort`
+            | sort)
 
         header="$pick_capital ($MAIN_REGION):"
         ;;
 esac
 
-answer=`echo -e "$COUNTRY_NAMES" \
+answer=$(echo -e "$remain_country_names" \
     | gum filter --header="$game_status_header $header" \
-    | cut -d' ' -f2-`
+    | cut -d' ' -f2-)
 
 if [ -z "$answer" ]; then
     exit 2
